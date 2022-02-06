@@ -39,7 +39,7 @@ platforms = expand_cxxstring_abis(platforms; skip=!Sys.islinux)
 products = [
     LibraryProduct(["libonnxruntime", "onnxruntime"], :libonnxruntime),
     LibraryProduct(["libonnxruntime_providers_shared", "onnxruntime_providers_shared"], :libonnxruntime_providers_shared),
-    LibraryProduct(["libonnxruntime_providers_cuda", "onnxruntime_providers_cuda"], :libonnxruntime_providers_cuda)
+    LibraryProduct(["libonnxruntime_providers_cuda", "onnxruntime_providers_cuda"], :libonnxruntime_providers_cuda; dont_dlopen = true)
 ]
 
 # Dependencies that must be installed before this package can be built
