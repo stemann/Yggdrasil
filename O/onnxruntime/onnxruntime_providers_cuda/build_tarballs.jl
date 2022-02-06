@@ -44,7 +44,7 @@ products = [
 
 # Dependencies that must be installed before this package can be built
 dependencies = [
-    Dependency("CUDNN_jll")
+    Dependency("CUDNN_jll", v"8.2.0")
 ]
 
 # Build the tarballs, and possibly a `build.jl` as well.
