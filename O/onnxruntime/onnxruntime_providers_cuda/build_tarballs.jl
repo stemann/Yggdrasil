@@ -30,8 +30,8 @@ install_license $dist_name*/LICENSE
 # These are the platforms we will build for by default, unless further
 # platforms are passed in on the command line
 platforms = [
-    Platform("x86_64", "Linux"),
-    Platform("x86_64", "Windows")
+    Platform("x86_64", "Linux"; cuda = "11.4"),
+    Platform("x86_64", "Windows"; cuda = "11.4")
 ]
 platforms = expand_cxxstring_abis(platforms; skip=!Sys.islinux)
 
