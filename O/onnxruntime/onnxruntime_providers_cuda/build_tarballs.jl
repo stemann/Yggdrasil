@@ -7,7 +7,7 @@ version = v"1.10.0"
 
 # Collection of sources required to complete build
 sources = [
-    ArchiveSource("https://github.com/microsoft/onnxruntime/releases/download/v$version/onnxruntime-linux-x64-gpu-$version.tgz", "bc880ba8a572acf79d50dcd35ba6dd8e5fb708d03883959ef60efbc15f5cdcb6"),
+    GitSource("https://github.com/microsoft/onnxruntime.git", "0d9030e79888d1d5828730b254fedc53c7b640c1"),
     ArchiveSource("https://github.com/microsoft/onnxruntime/releases/download/v$version/onnxruntime-win-x64-gpu-$version.zip", "0da11b8d953fad4ec75f87bb894f72dea511a3940cff2f4dad37451586d1ebbc")
 ]
 
@@ -15,16 +15,36 @@ sources = [
 script = raw"""
 cd $WORKSPACE/srcdir
 
-if [[ $target == x86_64-linux-gnu* ]]; then
-    dist_name=onnxruntime-linux-x64
-elif [[ $target == x86_64-w64-mingw32* ]]; then
+if [[ $target == x86_64-w64-mingw32* ]]; then
     dist_name=onnxruntime-win-x64
     chmod 755 $dist_name*/lib/*
+    mkdir -p $includedir $libdir
+    cp -av $dist_name*/include/* $includedir
+    find $dist_name*/lib -not -type d -not -name *tensorrt* | xargs -Isrc cp -av src $libdir
+    install_license $dist_name*/LICENSE
+else
+    cd onnxruntime
+    python3 tools/ci_build/build.py \
+        --build \
+        --build_dir $WORKSPACE/srcdir/onnxruntime/build \
+        --build_shared_lib \
+        --cmake_extra_defines \
+            CMAKE_INSTALL_PREFIX=$prefix \
+            CMAKE_TOOLCHAIN_FILE=${CMAKE_TARGET_TOOLCHAIN} \
+            onnxruntime_BUILD_UNIT_TESTS=OFF \
+            $cmake_extra_defines \
+        --config Release \
+        --cuda_home $prefix/cuda \
+        --cudnn_home $prefix \
+        --use_cuda \
+        --parallel $nproc \
+        --path_to_protoc_exe $host_bindir/protoc \
+        --skip_tests \
+        --update
+    cd build/Release
+    make install
+    install_license $WORKSPACE/srcdir/onnxruntime/LICENSE
 fi
-mkdir -p $includedir $libdir
-cp -av $dist_name*/include/* $includedir
-find $dist_name*/lib -not -type d -not -name *tensorrt* | xargs -Isrc cp -av src $libdir
-install_license $dist_name*/LICENSE
 """
 
 # These are the platforms we will build for by default, unless further
@@ -45,7 +65,9 @@ products = [
 # Dependencies that must be installed before this package can be built
 dependencies = [
     Dependency("CUDNN_jll", v"8.2.0"),
-    Dependency("Zlib_jll")
+    Dependency("Zlib_jll"),
+    BuildDependency("CUDA_full_jll"),
+    HostBuildDependency(PackageSpec("protoc_jll", Base.UUID("c7845625-083e-5bbe-8504-b32d602b7110"), v"3.16.1"))
 ]
 
 # Build the tarballs, and possibly a `build.jl` as well.
