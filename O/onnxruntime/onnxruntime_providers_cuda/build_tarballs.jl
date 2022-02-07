@@ -25,6 +25,8 @@ if [[ $target == x86_64-w64-mingw32* ]]; then
     find $dist_name*/lib -not -type d -not -name *tensorrt* | xargs -Isrc cp -av src $libdir
     install_license $dist_name*/LICENSE
 else
+    export PATH=$prefix/cuda/bin:$PATH
+
     cd onnxruntime
     python3 tools/ci_build/build.py \
         --build \
