@@ -5,6 +5,8 @@ using BinaryBuilder, Pkg
 name = "onnxruntime_providers_cuda"
 version = v"1.10.0"
 
+cuda_version = v"11.4"
+
 # Collection of sources required to complete build
 sources = [
     GitSource("https://github.com/microsoft/onnxruntime.git", "0d9030e79888d1d5828730b254fedc53c7b640c1"),
@@ -50,8 +52,8 @@ fi
 # These are the platforms we will build for by default, unless further
 # platforms are passed in on the command line
 platforms = [
-    Platform("x86_64", "Linux"; cuda = "11.4"),
-    Platform("x86_64", "Windows"; cuda = "11.4")
+    Platform("x86_64", "Linux"; cuda = string(cuda_version)),
+    Platform("x86_64", "Windows"; cuda = string(cuda_version))
 ]
 platforms = expand_cxxstring_abis(platforms; skip=!Sys.islinux)
 
@@ -66,7 +68,7 @@ products = [
 dependencies = [
     Dependency("CUDNN_jll", v"8.2.0"),
     Dependency("Zlib_jll"),
-    BuildDependency("CUDA_full_jll"),
+    BuildDependency(PackageSpec(name="CUDA_full_jll", version = cuda_version)),
     HostBuildDependency(PackageSpec("protoc_jll", Base.UUID("c7845625-083e-5bbe-8504-b32d602b7110"), v"3.16.1"))
 ]
 
