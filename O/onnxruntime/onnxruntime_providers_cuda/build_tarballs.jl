@@ -68,7 +68,7 @@ products = [
 
 # Dependencies that must be installed before this package can be built
 dependencies = [
-    Dependency("CUDNN_jll", v"8.2.0"),
+    Dependency("CUDNN_jll", v"8.2.2"),
     Dependency("Zlib_jll"),
     BuildDependency(PackageSpec(name="CUDA_full_jll", version = cuda_version)),
     HostBuildDependency(PackageSpec("protoc_jll", Base.UUID("c7845625-083e-5bbe-8504-b32d602b7110"), v"3.16.1"))
