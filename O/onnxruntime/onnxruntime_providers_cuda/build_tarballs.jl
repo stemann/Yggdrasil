@@ -5,7 +5,7 @@ using BinaryBuilder, Pkg
 name = "onnxruntime_providers_cuda"
 version = v"1.10.0"
 
-cuda_version = v"11.4"
+cuda_version = v"11.4.2"
 
 # Collection of sources required to complete build
 sources = [
@@ -54,8 +54,8 @@ fi
 # These are the platforms we will build for by default, unless further
 # platforms are passed in on the command line
 platforms = [
-    Platform("x86_64", "Linux"; cuda = string(cuda_version)),
-    Platform("x86_64", "Windows"; cuda = string(cuda_version))
+    Platform("x86_64", "Linux"; cuda = "$(cuda_version.major).$(cuda_version.minor)"),
+    Platform("x86_64", "Windows"; cuda = "$(cuda_version.major).$(cuda_version.minor)")
 ]
 platforms = expand_cxxstring_abis(platforms; skip=!Sys.islinux)
 
