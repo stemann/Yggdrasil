@@ -10,11 +10,13 @@ cuda_version = v"11.4.2"
 # Collection of sources required to complete build
 sources = [
     GitSource("https://github.com/microsoft/onnxruntime.git", "0d9030e79888d1d5828730b254fedc53c7b640c1"),
-    ArchiveSource("https://github.com/microsoft/onnxruntime/releases/download/v$version/onnxruntime-win-x64-gpu-$version.zip", "0da11b8d953fad4ec75f87bb894f72dea511a3940cff2f4dad37451586d1ebbc")
+    ArchiveSource("https://github.com/microsoft/onnxruntime/releases/download/v$version/onnxruntime-win-x64-gpu-$version.zip", "0da11b8d953fad4ec75f87bb894f72dea511a3940cff2f4dad37451586d1ebbc"),
 ]
 
 # Bash recipe for building across all platforms
 script = raw"""
+cuda_version=`echo $bb_full_target | sed -E -e 's/.*cuda\+([0-9]+\.[0-9]+).*/\1/'`
+
 cd $WORKSPACE/srcdir
 
 if [[ $target == x86_64-w64-mingw32* ]]; then
@@ -25,27 +27,28 @@ if [[ $target == x86_64-w64-mingw32* ]]; then
     find $dist_name*/lib -not -type d -not -name *tensorrt* | xargs -Isrc cp -av src $libdir
     install_license $dist_name*/LICENSE
 else
-    export PATH=$prefix/cuda/bin:$PATH
-
     cd onnxruntime
-    python3 tools/ci_build/build.py \
-        --build \
-        --build_dir $WORKSPACE/srcdir/onnxruntime/build \
-        --build_shared_lib \
-        --cmake_extra_defines \
-            CMAKE_INSTALL_PREFIX=$prefix \
-            CMAKE_TOOLCHAIN_FILE=${CMAKE_TARGET_TOOLCHAIN} \
-            onnxruntime_BUILD_UNIT_TESTS=OFF \
-            $cmake_extra_defines \
-        --config Release \
-        --cuda_home $prefix/cuda \
-        --cudnn_home $prefix \
-        --use_cuda \
-        --parallel $nproc \
-        --path_to_protoc_exe $host_bindir/protoc \
-        --skip_tests \
-        --update
-    cd build/Release
+    git submodule update --init --recursive
+    mkdir -p build
+    cd build
+    cmake $WORKSPACE/srcdir/onnxruntime/cmake \
+        -DCMAKE_INSTALL_PREFIX=$prefix \
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TARGET_TOOLCHAIN} \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared \
+        -DCUDA_RUNTIME_LIBRARY=Shared \
+        -DCUDA_USE_STATIC_CUDA_RUNTIME=OFF \
+        -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+        -DCMAKE_CUDA_COMPILER_ID_RUN=1 \
+        -DONNX_CUSTOM_PROTOC_EXECUTABLE=$host_bindir/protoc \
+        -Donnxruntime_BUILD_SHARED_LIB=ON \
+        -Donnxruntime_BUILD_UNIT_TESTS=OFF \
+        -Donnxruntime_DISABLE_RTTI=OFF \
+        -Donnxruntime_USE_CUDA=ON \
+        -Donnxruntime_CUDA_VERSION=$cuda_version \
+        -Donnxruntime_CUDA_HOME=$prefix/cuda \
+        -Donnxruntime_CUDNN_HOME=$prefix \
+        $cmake_extra_args
     make install
     install_license $WORKSPACE/srcdir/onnxruntime/LICENSE
 fi
@@ -61,9 +64,7 @@ platforms = expand_cxxstring_abis(platforms; skip=!Sys.islinux)
 
 # The products that we will ensure are always built
 products = [
-    LibraryProduct(["libonnxruntime", "onnxruntime"], :libonnxruntime),
-    LibraryProduct(["libonnxruntime_providers_shared", "onnxruntime_providers_shared"], :libonnxruntime_providers_shared),
-    LibraryProduct(["libonnxruntime_providers_cuda", "onnxruntime_providers_cuda"], :libonnxruntime_providers_cuda; dont_dlopen = true)
+    LibraryProduct(["libonnxruntime", "onnxruntime"], :libonnxruntime)
 ]
 
 # Dependencies that must be installed before this package can be built
