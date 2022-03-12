@@ -4,7 +4,7 @@ using Base.BinaryPlatforms: arch, os
 include("../../fancy_toys.jl")
 
 name = "TensorRT"
-version = v"8.0.1"
+version = v"8.2.1"
 
 script = raw"""
 cd ${WORKSPACE}/srcdir
@@ -47,7 +47,7 @@ products = vcat(
 
 dependencies = [Dependency("CUDNN_jll", v"8.2.1"; compat="8.2")]
 
-cuda_versions = [v"10.2", v"11.0", v"11.1", v"11.2", v"11.3"]
+cuda_versions = [v"10.2", v"11.0", v"11.1", v"11.2", v"11.3", v"11.4", v"11.5"]
 for cuda_version in cuda_versions
     cuda_tag = "$(cuda_version.major).$(cuda_version.minor)"
     include("build_$(cuda_tag).jl")
@@ -55,8 +55,7 @@ for cuda_version in cuda_versions
     for (platform, sources) in platforms_and_sources
         augmented_platform = Platform(arch(platform), os(platform); cuda=cuda_tag)
         should_build_platform(triplet(augmented_platform)) || continue
-        arch(platform) != "aarch64" || cuda_version == v"10.2" || cuda_version == v"11.3" || continue # AArch64 only support CUDA v10.2 and v11.3
-        arch(platform) != "powerpc64le" || cuda_version == v"11.3" || continue # PowerPC64LE only support CUDA 11.3
+        arch(platform) != "aarch64" || cuda_version == v"10.2" || cuda_version == v"11.4" || continue # AArch64 only support CUDA v10.2 and v11.4
         build_tarballs(ARGS, name, version, sources, script, [augmented_platform],
                        products, dependencies; lazy_artifacts=true)
     end
