@@ -86,6 +86,7 @@ install_license EULA.txt
 
 products = Product[
     # this JLL isn't meant for use by Julia packages, but only as build dependency
+    FileProduct("cuda/include/thrust/version.h", :cuda_include_thrust_version_h),
 ]
 
 dependencies = []
