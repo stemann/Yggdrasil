@@ -161,6 +161,7 @@ fi
 
 cd ${prefix}/cuda
 install_license EULA.txt
+find ${prefix}/cuda
 """
 
 products = Product[
