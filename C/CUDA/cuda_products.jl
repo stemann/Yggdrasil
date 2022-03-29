@@ -75,3 +75,54 @@ function cuda_products(cuda_version::VersionNumber;
     end
     return products
 end
+
+function cuda_full_products(cuda_version::VersionNumber;
+    cupti_windows_library_name::AbstractString,
+    cusolver_version::Union{VersionNumber,Nothing} = nothing,
+    nvvm_windows_library_name::AbstractString)
+    cuda_products_ = cuda_products(cuda_version;
+        cupti_windows_library_name,
+        cusolver_version,
+        nvvm_windows_library_name)
+    prefix_cuda = "cuda"
+    bin_path = joinpath(prefix_cuda, "bin")
+    lib_paths = [joinpath(prefix_cuda, "lib64"), joinpath(prefix_cuda, "bin")]
+    products = Product[]
+    for product in cuda_products_
+        if product isa LibraryProduct
+            if product.variable_name == :libcusolverMg && cuda_version.major == 11 && cuda_version.minor >= 5 ## dont_dlopen libcusolverMg on CUDA >= 11.5
+                push!(products, LibraryProduct(product.libnames, product.variable_name, lib_paths; dont_dlopen=true))
+            elseif product.variable_name == :libnvvm
+                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "nvvm/lib64"), joinpath(prefix_cuda, "nvvm/bin")]))
+            elseif product.variable_name == :libcupti
+                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "extras/CUPTI/lib64")]))
+            else
+                push!(products, LibraryProduct(product.libnames, product.variable_name, lib_paths))
+            end
+        elseif product isa FileProduct
+            if product.variable_name == :libcudadevrt
+                push!(products, FileProduct([
+                    startswith(p, r"lib/lib") ? joinpath(prefix_cuda, replace(p, r"^lib" => s"lib64")) : joinpath(prefix_cuda, replace(p, r"^lib" => s"lib/x64"))
+                    for p in product.paths], product.variable_name))
+            elseif product.variable_name == :libdevice
+                push!(products, FileProduct([joinpath(prefix_cuda, replace(p, r"^share" => s"nvvm")) for p in product.paths], product.variable_name))
+            else
+                push!(products, FileProduct([joinpath(prefix_cuda, p) for p in product.paths], product.variable_name))
+            end
+        elseif product isa ExecutableProduct
+            if product.variable_name == :compute_sanitizer
+                push!(products, FileProduct([joinpath(bin_path, "compute-sanitizer"), joinpath(prefix_cuda, "compute-sanitizer", "compute-sanitizer.exe")], product.variable_name))
+            else
+                push!(products, ExecutableProduct(product.binnames, product.variable_name, bin_path))
+            end
+        end
+    end
+    products = vcat(products,
+        [
+            FileProduct("cuda/include/cub/cub.cuh", :cuda_include_cub_cub_cuh),
+            FileProduct("cuda/include/cuda/std/version", :cuda_include_cuda_std_version),
+            FileProduct("cuda/include/thrust/version.h", :cuda_include_thrust_version_h),
+            FileProduct("cuda/include/cuda.h", :cuda_include_cuda_h),
+        ])
+    return products
+end
