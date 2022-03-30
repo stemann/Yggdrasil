@@ -125,7 +125,12 @@ function cuda_full_products(cuda_version::VersionNumber;
             end
         elseif product isa ExecutableProduct
             if product.variable_name == :compute_sanitizer
-                push!(products, FileProduct([joinpath(bin_path, "compute-sanitizer"), joinpath(prefix_cuda, "compute-sanitizer", "compute-sanitizer.exe")], product.variable_name))
+                push!(products, FileProduct(
+                    [
+                        joinpath(bin_path, "compute-sanitizer"),
+                        joinpath(prefix_cuda, "compute-sanitizer", "compute-sanitizer.exe"),
+                        joinpath(prefix_cuda, "Sanitizer", "compute-sanitizer.exe"), # CUDA 11.0, x86_64-w64-mingw32
+                    ], product.variable_name))
             else
                 push!(products, ExecutableProduct(product.binnames, product.variable_name, bin_path))
             end
