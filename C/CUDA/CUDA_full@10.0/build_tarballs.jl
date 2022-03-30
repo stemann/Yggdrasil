@@ -1,5 +1,6 @@
 using BinaryBuilder
 
+include("../cuda_products.jl")
 include("../../../fancy_toys.jl")
 
 name = "CUDA_full"
@@ -87,10 +88,9 @@ install_license EULA.txt
 find ${prefix}/cuda
 """
 
-products = Product[
-    # this JLL isn't meant for use by Julia packages, but only as build dependency
-    FileProduct("cuda/include/thrust/version.h", :cuda_include_thrust_version_h),
-]
+products = cuda_full_products(version;
+    cupti_windows_library_name = "cupti64_100",
+    nvvm_windows_library_name = "nvvm64_33_0")
 
 dependencies = []
 
