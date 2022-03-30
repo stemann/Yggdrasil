@@ -95,7 +95,12 @@ function cuda_full_products(cuda_version::VersionNumber;
             elseif product.variable_name == :libnvvm
                 push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "nvvm/lib64"), joinpath(prefix_cuda, "nvvm/lib"), joinpath(prefix_cuda, "nvvm/bin")]))
             elseif product.variable_name == :libcupti
-                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "extras/CUPTI/lib64"), joinpath(prefix_cuda, "extras/CUPTI/lib")]))
+                push!(products, LibraryProduct(product.libnames, product.variable_name,
+                    [
+                        joinpath(prefix_cuda, "extras/CUPTI/lib64"),
+                        joinpath(prefix_cuda, "extras/CUPTI/lib"),
+                        joinpath(prefix_cuda, "extras/CUPTI/libx64"), # CUDA 10.0, x86_64-w64-mingw32
+                    ]))
             elseif cuda_version.major <= 10 && cuda_version.minor <= 2 ## dont_dlopen on CUDA 9.0-9.2 and on 10.0-10.2
                 push!(products, LibraryProduct(product.libnames, product.variable_name, lib_paths; dont_dlopen=true))
             else
