@@ -167,6 +167,7 @@ find ${prefix}/cuda
 
 products = cuda_full_products(version;
     cupti_windows_library_name = "cupti64_102",
+    include_nvtoolsext = false,
     nvvm_windows_library_name = "nvvm64_33_0")
 
 dependencies = []
