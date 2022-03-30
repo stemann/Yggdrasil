@@ -103,9 +103,16 @@ function cuda_full_products(cuda_version::VersionNumber;
             end
         elseif product isa FileProduct
             if product.variable_name == :libcudadevrt
-                push!(products, FileProduct([
-                    startswith(p, r"lib/lib") ? joinpath(prefix_cuda, replace(p, r"^lib" => s"lib64")) : joinpath(prefix_cuda, replace(p, r"^lib" => s"lib/x64"))
-                    for p in product.paths], product.variable_name))
+                paths = String[]
+                for p in product.paths
+                    if startswith(p, r"lib/lib")
+                        push!(paths, joinpath(prefix_cuda, replace(p, r"^lib" => s"lib64")))
+                        push!(paths, joinpath(prefix_cuda, p))
+                    else
+                        push!(paths, joinpath(prefix_cuda, replace(p, r"^lib" => s"lib/x64")))
+                    end
+                end
+                push!(products, FileProduct(paths, product.variable_name))
             elseif product.variable_name == :libdevice
                 push!(products, FileProduct([joinpath(prefix_cuda, replace(p, r"^share" => s"nvvm")) for p in product.paths], product.variable_name))
             else
