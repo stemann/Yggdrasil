@@ -121,10 +121,13 @@ function cuda_full_products(cuda_version::VersionNumber;
     end
     products = vcat(products,
         [
-            FileProduct("cuda/include/cub/cub.cuh", :cuda_include_cub_cub_cuh),
-            FileProduct("cuda/include/cuda/std/version", :cuda_include_cuda_std_version),
+            FileProduct(["cuda/include/cub/cub.cuh", "cuda/include/thrust/system/cuda/detail/cub/cub.cuh"], :cuda_include_cub_cub_cuh),
             FileProduct("cuda/include/thrust/version.h", :cuda_include_thrust_version_h),
             FileProduct("cuda/include/cuda.h", :cuda_include_cuda_h),
         ])
+    if (cuda_version.major == 10 && cuda_version.minor >= 2) ||
+        cuda_version.major >= 11
+        push!(products, FileProduct("cuda/include/cuda/std/version", :cuda_include_cuda_std_version))
+    end
     return products
 end
