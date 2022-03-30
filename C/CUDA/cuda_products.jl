@@ -86,16 +86,16 @@ function cuda_full_products(cuda_version::VersionNumber;
         nvvm_windows_library_name)
     prefix_cuda = "cuda"
     bin_path = joinpath(prefix_cuda, "bin")
-    lib_paths = [joinpath(prefix_cuda, "lib64"), joinpath(prefix_cuda, "bin")]
+    lib_paths = [joinpath(prefix_cuda, "lib64"), joinpath(prefix_cuda, "lib"), joinpath(prefix_cuda, "bin")]
     products = Product[]
     for product in cuda_products_
         if product isa LibraryProduct
             if product.variable_name == :libcusolverMg && cuda_version.major == 11 && cuda_version.minor >= 5 ## dont_dlopen libcusolverMg on CUDA >= 11.5
                 push!(products, LibraryProduct(product.libnames, product.variable_name, lib_paths; dont_dlopen=true))
             elseif product.variable_name == :libnvvm
-                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "nvvm/lib64"), joinpath(prefix_cuda, "nvvm/bin")]))
+                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "nvvm/lib64"), joinpath(prefix_cuda, "nvvm/lib"), joinpath(prefix_cuda, "nvvm/bin")]))
             elseif product.variable_name == :libcupti
-                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "extras/CUPTI/lib64")]))
+                push!(products, LibraryProduct(product.libnames, product.variable_name, [joinpath(prefix_cuda, "extras/CUPTI/lib64"), joinpath(prefix_cuda, "extras/CUPTI/lib")]))
             else
                 push!(products, LibraryProduct(product.libnames, product.variable_name, lib_paths))
             end
