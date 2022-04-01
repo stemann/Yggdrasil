@@ -5,7 +5,7 @@ using BinaryBuilder, Pkg
 name = "onnxruntime_providers_cuda"
 version = v"1.10.0"
 
-cuda_version = v"11.4.2"
+cuda_version = v"11.2.2"
 
 # Collection of sources required to complete build
 sources = [
