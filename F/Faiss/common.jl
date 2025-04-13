@@ -18,6 +18,12 @@ atomic_patch -p1 ../patches/gpu-shared_library.patch
 
 cmake_extra_args=()
 
+if [[ $bb_full_target != *rocm* ]]; then
+    cmake_extra_args+=(
+        -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TARGET_TOOLCHAIN
+    )
+fi
+
 cuda_version=$(echo $bb_full_target | sed -E 's/.*-cuda\+([^-]+).*/\1/')
 if [[ $bb_full_target == *cuda* ]]; then
     if [[ $cuda_version == "11.8" ]]; then
@@ -44,10 +50,35 @@ if [[ $bb_full_target == *cuda* ]]; then
         -DCMAKE_CUDA_ARCHITECTURES=$cuda_archs
     )
 elif [[ $bb_full_target == *rocm* ]]; then
-    export HIP_PATH=$prefix/hip
+    mv ${WORKSPACE}/srcdir/HIP_scripts/rocm-clang* ${prefix}/llvm/bin
+
+    # make hipconfig etc. happy
+    # mkdir -p /opt/rocm
+    # ln -s $prefix/llvm /opt/rocm/llvm
+    # ln -s $prefix/bin /opt/rocm/bin
+    # ln -s $prefix/hip/lib /opt/rocm/lib
+
+    ln -s $prefix/hip/lib/cmake/hip-lang $prefix/lib/cmake/hip-lang
+
+    export ROCM_PATH=${prefix}
+
+    export HIP_PATH=${prefix}/hip
+    export HIP_PLATFORM=amd
+    export HIP_RUNTIME=rocclr
+    export HIP_COMPILER=clang
+
+    # add hipconfig to $PATH
+    export PATH=$PATH:$HIP_PATH/bin
+
+    export HIP_ARCHITECTURES=gfx900
+
     cmake_extra_args+=(
+        -DCMAKE_CXX_COMPILER=${prefix}/llvm/bin/rocm-clang++
+        -DCMAKE_LINKER=${prefix}/llvm/bin/ld.lld
         -DFAISS_ENABLE_GPU=ON
         -DFAISS_ENABLE_ROCM=ON
+        -DROCM_PATH=$ROCM_PATH
+        -DCMAKE_HIP_ARCHITECTURES=$HIP_ARCHITECTURES
     )
 fi
 
@@ -75,7 +106,6 @@ cmake -B build \
     -DBUILD_TESTING=OFF \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=$prefix \
-    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TARGET_TOOLCHAIN} \
     -DFAISS_ENABLE_C_API=ON \
     -DFAISS_ENABLE_GPU=OFF \
     -DFAISS_ENABLE_MKL=OFF \

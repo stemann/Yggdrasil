@@ -10,6 +10,11 @@ version = v"1.10.0"
 
 include(joinpath(@__DIR__, "..", "common.jl"))
 
+sources = [
+    sources...,
+    DirectorySource(joinpath(YGGDRASIL_DIR, "H", "HIP", "scripts"); target="HIP_scripts"),
+]
+
 # Override the default platforms
 platforms = [Platform("x86_64", "linux"; rocm="1")]
 
@@ -24,8 +29,13 @@ products = [
 for platform in platforms
     should_build_platform(triplet(platform)) || continue
 
+    rocm_version = v"5.4.4"
     rocm_deps = [
         Dependency("HIP_jll"),
+        BuildDependency(PackageSpec(; name="rocm_cmake_jll", version=rocm_version)),
+        BuildDependency(PackageSpec(; name="ROCmCompilerSupport_jll", version=rocm_version)),
+        BuildDependency(PackageSpec(; name="ROCmDeviceLibs_jll", version=rocm_version)),
+        BuildDependency(PackageSpec(; name="ROCmLLVM_jll", version=rocm_version)),
     ]
 
     build_tarballs(ARGS, name, version, sources, script, [platform], products, [dependencies; rocm_deps];
