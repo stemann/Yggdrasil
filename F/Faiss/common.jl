@@ -43,6 +43,12 @@ if [[ $bb_full_target == *cuda* ]]; then
         -DCUDAToolkit_ROOT=$CUDA_PATH
         -DCMAKE_CUDA_ARCHITECTURES=$cuda_archs
     )
+elif [[ $bb_full_target == *rocm* ]]; then
+    export HIP_PATH=$prefix/hip
+    cmake_extra_args+=(
+        -DFAISS_ENABLE_GPU=ON
+        -DFAISS_ENABLE_ROCM=ON
+    )
 fi
 
 if $USE_CCACHE; then
