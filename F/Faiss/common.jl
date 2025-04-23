@@ -18,6 +18,19 @@ atomic_patch -p1 ../patches/faiss-mingw32.patch
 
 cmake_extra_args=()
 
+if [[ $bb_full_target == *march+* ]]; then
+    march=$(echo $bb_full_target | sed -E 's/.*-march\+([^-]+).*/\1/')
+    if [[ $march == "avx2" ]]; then
+        cmake_extra_args+=(
+            -DFAISS_OPT_LEVEL=avx2
+        )
+    elif [[ $march == "avx512" ]]; then
+        cmake_extra_args+=(
+            -DFAISS_OPT_LEVEL=avx512
+        )
+    fi
+fi
+
 if [[ $bb_full_target == *cuda* ]]; then
     cuda_version=${bb_full_target##*-cuda+}
     if [[ $cuda_version == "11.8" ]]; then
