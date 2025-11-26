@@ -26,9 +26,9 @@ References:
 * https://protobuf.dev/news/2022-05-06/#versioning
 * https://github.com/protocolbuffers/protobuf/blob/v21.0/version.json
 """
-base_version = v"22.0"
-# Cf. https://github.com/protocolbuffers/protobuf/blob/v22.0/version.json
-cpp_library_version = VersionNumber(4, base_version.major, base_version.minor)
+base_version = v"21.0"
+# Cf. https://github.com/protocolbuffers/protobuf/blob/v21.0/version.json
+cpp_library_version = VersionNumber(3, base_version.major, base_version.minor)
 
 sources = [
     GitSource("https://github.com/protocolbuffers/protobuf.git", "a847a8dc4ba1d99e7ba917146c84438b4de7d085"),
@@ -50,15 +50,8 @@ protoc_library_symbols = Dict(
 )
 library_symbols = merge(protobuf_library_symbols, protobuf_lite_library_symbols)
 
-# `protobuf` includes https://github.com/protocolbuffers/utf8_range
-additional_include_symbols = Dict(
-    :utf8_range_h => "utf8_range.h",
-    :utf8_validity_h => "utf8_validity.h",
-)
-additional_library_symbols = Dict(
-    :libutf8_range => "utf8_range",
-    :libutf8_validity => "utf8_validity",
-)
+additional_include_symbols = Dict{Symbol,String}()
+additional_library_symbols = Dict{Symbol,String}()
 all_include_symbols = merge(include_symbols, additional_include_symbols)
 all_library_symbols = merge(library_symbols, additional_library_symbols)
 
@@ -105,9 +98,6 @@ products_map["ProtocolBuffersSDK_static"] = vcat(
 script = raw"""
 cd $WORKSPACE/srcdir/protobuf
 
-# This patch stems from upstream: https://github.com/protocolbuffers/protobuf/pull/12043
-atomic_patch -p1 ../patches/aarch64.patch
-
 atomic_patch -p1 ../patches/protobuf-cmake-install-components.patch
 
 cmake_extra_args=()
@@ -125,12 +115,10 @@ fi
 
 if [[ "$BB_PROTOBUF_PRODUCT" == ProtocolBuffersCompiler ]] || [[ "$BB_PROTOBUF_PRODUCT" == ProtocolBuffersSDK* ]]; then
     cmake_extra_args+=(
-        -Dprotobuf_BUILD_PROTOBUF_BINARIES=ON
         -Dprotobuf_BUILD_PROTOC_BINARIES=ON
     )
 else
     cmake_extra_args+=(
-        -Dprotobuf_BUILD_PROTOBUF_BINARIES=ON
         -Dprotobuf_BUILD_PROTOC_BINARIES=OFF
     )
 fi
@@ -167,7 +155,6 @@ else
     )
 fi
 
-git submodule update --init --recursive --depth 1 third_party/jsoncpp
 cmake \
     -B build \
     -G Ninja \
@@ -186,10 +173,9 @@ install_license LICENSE
 platforms = expand_cxxstring_abis(supported_platforms())
 
 dependencies = [
-    Dependency("CompilerSupportLibraries_jll"), # TODO should be in abseil_cpp_jll
-    Dependency("abseil_cpp_jll"; compat="20230125.0"),
+    Dependency("abseil_cpp_jll"; compat="20230125.0"), # TODO should likely be lts_2021_11_02
     Dependency("Zlib_jll"),
 ]
 
 julia_compat = "1.6"
-preferred_gcc_version = v"8" # GCC >= 7.3 required: https://github.com/protocolbuffers/protobuf/blob/v22.0/src/google/protobuf/port_def.inc#L196
+preferred_gcc_version = v"8"
