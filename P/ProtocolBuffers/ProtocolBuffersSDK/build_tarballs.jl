@@ -5,6 +5,7 @@ using BinaryBuilder, Pkg
 include(joinpath(@__DIR__, "..", "common.jl"))
 
 name = "ProtocolBuffersSDK"
+version = cpp_library_version
 
 script = """
 export BB_PROTOBUF_PRODUCT=$name
