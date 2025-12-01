@@ -1,7 +1,7 @@
-version = v"1.10.2"
+version = v"1.10.1"
 
 sources = [
-    GitSource("https://github.com/onnx/onnx.git", "da889e6b95750350726d149bf447bf0cd1245964"),
+    GitSource("https://github.com/onnx/onnx.git", "1f63dcb7fcc3a8bf5c3c8e326867ecd6f5c43f35"),
     DirectorySource(joinpath(@__DIR__, "bundled")),
 ]
 
